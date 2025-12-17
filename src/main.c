@@ -1,7 +1,10 @@
-#include <stdio.h>
+#include "board.h"
+#include <stdlib.h>
 
 int main(void) {
-  printf("Hello World!\n");
+  Board *board = (Board *)malloc(sizeof(Board));
+  init_board(board);
+  print_board(board);
 
   return 0;
 }
