@@ -32,6 +32,7 @@ typedef uint32_t Move;
 #define INITIAL_REMOVAL_POS(move)        ((move) & 0x7F)
 
 #define MAX_MOVES 32
+#define MAX_SEQUENCES 256
 
 typedef struct {
   int count;

@@ -21,11 +21,11 @@ Move create_initial_removal(int row, int col) {
 }
 
 void dfs_jumps(const Board *board,
-                      int row, int col,
-                      bool is_white_turn,
-                      MoveSequence *current,
-                      MoveSequence *results,
-                      int *result_count) {
+               int row, int col,
+               bool is_white_turn,
+               MoveSequence *current,
+               MoveSequence *results,
+               int *result_count) {
   bool found_jump = false;
 
   for (int dir = 0; dir < 4; dir++) {
@@ -63,6 +63,9 @@ void dfs_jumps(const Board *board,
       over_row, over_col,
       dir
     );
+
+    if (current->count >= MAX_MOVES)
+      continue;
 
     current->jumps[current->count++] = jump;
 

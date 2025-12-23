@@ -16,7 +16,6 @@ int pop_lsb(Bitboard *bitboard) {
   return idx;
 }
 
-
 int popcount(Bitboard bitboard) {
   int count = 0;
 
