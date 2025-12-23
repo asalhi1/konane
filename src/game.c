@@ -34,7 +34,6 @@ void run_game(void) {
   printf("Game over!\n");
 }
 
-
 bool read_coord(int *row, int *col) {
   char col_char;
   int row_num;
@@ -54,8 +53,6 @@ bool read_coord(int *row, int *col) {
   *row = row_num - 1;
   return true;
 }
-
-#include <stdio.h>
 
 bool human_choose_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq) {
   char from_col_char, to_col_char;
