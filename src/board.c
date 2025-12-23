@@ -1,5 +1,29 @@
 #include "board.h"
-#include <stdio.h>
+
+bool is_valid_position(int row, int col) {
+  if ((row < 0) || (row > BOARD_SIZE - 1) ||
+      (col < 0) || (col > BOARD_SIZE - 1)) return false;
+
+  return true;
+}
+
+int pop_lsb(Bitboard *bitboard) {
+  if (*bitboard == 0) return -1;
+
+  int idx = __builtin_ctzll(*bitboard);
+  *bitboard &= (*bitboard - 1);
+
+  return idx;
+}
+
+
+int popcount(Bitboard bitboard) {
+  int count = 0;
+
+  while(bitboard) count += bitboard & 1, bitboard >>= 1;
+
+  return count;
+}
 
 int coord_to_index(int row, int col) {
   return row * BOARD_SIZE + col;
@@ -88,6 +112,29 @@ void print_board(const Board *board) {
     printf("%d\n", row + 1);
   }
 
+  printf("  ");
+  for (int col = 0; col < BOARD_SIZE; col ++) {
+    printf("%c ", 'A' + col);
+  }
+  printf("\n");
+}
+
+void print_bitboard(const Bitboard bitboard) {
+  printf("  ");
+  for (int col = 0; col < BOARD_SIZE; col ++) {
+    printf("%c ", 'A' + col);
+  }
+  printf("\n");
+
+  for (int row = 0; row < BOARD_SIZE; row ++) {
+    printf("%d ", row + 1);
+    for (int col = 0; col < BOARD_SIZE; col ++) {
+      Bitboard mask = get_bitmask(row, col);
+      printf("%c ", (bitboard & mask) ? '1' : '0');
+    }
+    printf("%d\n", row + 1);
+  }
+  
   printf("  ");
   for (int col = 0; col < BOARD_SIZE; col ++) {
     printf("%c ", 'A' + col);
