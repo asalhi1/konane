@@ -13,6 +13,9 @@ CFLAGS := \
 					-Wno-unused-value \
 					-Wno-unused-parameter \
 					-Wno-return-type \
+					-lncurses \
+					-lpanel \
+					-lmenu \
 					-std=gnu99 \
 
 CFILES := $(shell find src/ -name '*.c')

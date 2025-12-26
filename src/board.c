@@ -97,23 +97,23 @@ Bitboard get_bitmask(int row, int col) {
 void print_board(const Board *board) {
   printf("  ");
   for (int col = 0; col < BOARD_SIZE; col ++) {
-    printf("%c ", 'A' + col);  
+    printf("\033[1m%c\033[0m ", 'A' + col);  
   }
   printf("\n");
 
   for (int row = 0; row < BOARD_SIZE; row ++) {
-    printf("%d ", row + 1);
+    printf("\033[1m%d\033[0m ", row + 1);
     for (int col = 0; col < BOARD_SIZE; col ++) {
-      if (is_white(board, row, col)) printf("W ");
-      else if (is_black(board, row, col)) printf("B ");
+      if (is_white(board, row, col)) printf("\033[31mW\033[0m ");
+      else if (is_black(board, row, col)) printf("\033[34mB\033[0m ");
       else printf(". ");
     }
-    printf("%d\n", row + 1);
+    printf("\033[1m%d\033[0m\n", row + 1);
   }
 
   printf("  ");
   for (int col = 0; col < BOARD_SIZE; col ++) {
-    printf("%c ", 'A' + col);
+    printf("\033[1m%c\033[0m ", 'A' + col);
   }
   printf("\n");
 }

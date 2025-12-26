@@ -20,6 +20,29 @@ Move create_initial_removal(int row, int col) {
   return MOVE_INITIAL_REMOVAL_ENCODE(idx);
 }
 
+void print_move_sequence(const MoveSequence *seq) {
+  if (!seq || seq->count == 0) {
+    printf("Empty sequence.\n");
+    return;
+  } 
+
+  Move first = seq->jumps[0];
+  int idx = MOVE_FROM(first);
+  int from_row, from_col;
+  index_to_coord(idx, &from_row, &from_col);
+  printf("%c%d", 'A' + from_col, from_row + 1);
+
+  for (int i = 0; i < seq->count; i ++) {
+    Move move = seq->jumps[i];
+    int to_idx = MOVE_FROM(move);
+    int to_row, to_col;
+    index_to_coord(to_idx, &to_row, &to_col);
+    printf(" -> %c%d", 'A' + to_col, to_row + 1);
+  }
+
+  printf("\n");
+}
+
 void dfs_jumps(const Board *board,
                int row, int col,
                bool is_white_turn,

@@ -50,6 +50,8 @@ int generate_all_moves(const Board *board,
                        bool is_white_turn,
                        MoveSequence *out_moves);
 
+void print_move_sequence(const MoveSequence *seq);
+
 void dfs_jumps(const Board *board,
                int row, int col,
                bool is_white_turn,
