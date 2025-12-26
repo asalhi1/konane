@@ -13,13 +13,13 @@ void main_menu(void) {
 
   switch(n) {
     case 1:
-      run_game();
+      run_game(GAME_MODE_HUMAN_VS_HUMAN);
       break;
     case 2:
-      //run_game(2);
+      run_game(GAME_MODE_HUMAN_VS_AI);
       break;  
     case 3:
-      //run_game(3);
+      run_game(GAME_MODE_AI_VS_AI);
       break;
   }
 }

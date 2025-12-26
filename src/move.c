@@ -34,7 +34,7 @@ void print_move_sequence(const MoveSequence *seq) {
 
   for (int i = 0; i < seq->count; i ++) {
     Move move = seq->jumps[i];
-    int to_idx = MOVE_FROM(move);
+    int to_idx = MOVE_TO(move);
     int to_row, to_col;
     index_to_coord(to_idx, &to_row, &to_col);
     printf(" -> %c%d", 'A' + to_col, to_row + 1);

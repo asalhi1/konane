@@ -1,37 +1,155 @@
 #include "game.h"
 
-void run_game(void) {
-  Board *board = (Board *)malloc(sizeof(Board));
-  init_board(board);
-  print_board(board);
-
-  int row, col;
-  do {
-    printf("Black: remove a stone (corner/center): ");
-  } while (!read_coord(&row, &col) || !execute_initial_removal(board, row, col, true));
-
-  print_board(board);
-
-  do {
-    printf("White: remove a stone adjacent to black's removal: ");
-  } while (!read_coord(&row, &col) || !execute_initial_removal(board, row, col, false));
-
-  print_board(board);
-
-  bool is_white_turn = false;
-  while (true) {
+void run_game(GameMode mode) {
+    if (mode == GAME_MODE_HUMAN_VS_AI || mode == GAME_MODE_AI_VS_AI) {
+        ai_init();
+    }
+    
+    Board *board = (Board *)malloc(sizeof(Board));
+    init_board(board);
+  
+    bool human_is_black = true;
+    bool human_is_white = false;
+    
+    if (mode == GAME_MODE_HUMAN_VS_AI) {
+        human_is_black = (rand() % 2) == 0;
+        human_is_white = !human_is_black;
+        
+        printf("Human plays as: %s\n", human_is_black ? "Black (starts)" : "White");
+        printf("AI plays as: %s\n", human_is_black ? "White" : "Black (starts)");
+    } else if (mode == GAME_MODE_AI_VS_AI) {
+        printf("AI 1: Black (starts)\n");
+        printf("AI 2: White\n");
+    }
+    
     print_board(board);
 
-    MoveSequence seq;
-    if (!human_choose_move(board, is_white_turn, &seq))
-      break;
+    int row, col;
+    
+    if (mode == GAME_MODE_HUMAN_VS_HUMAN || 
+        (mode == GAME_MODE_HUMAN_VS_AI && human_is_black)) {
+        do {
+            printf("Black: remove a stone (corner/center): ");
+        } while (!read_coord(&row, &col) || !execute_initial_removal(board, row, col, true));
+    } else {
+        printf("Black (AI) is removing a stone...\n");
+        
+        int valid_positions[5][2] = {
+            {0, 0},     
+            {0, BOARD_SIZE - 1},
+            {BOARD_SIZE - 1, 0},
+            {BOARD_SIZE - 1, BOARD_SIZE - 1},
+            {BOARD_SIZE / 2, BOARD_SIZE / 2}
+        };
+        
+        int chosen_index = rand() % 5;
+        row = valid_positions[chosen_index][0];
+        col = valid_positions[chosen_index][1];
+        
+        if (!execute_initial_removal(board, row, col, true)) {
+            for (int i = 0; i < 5; i++) {
+                row = valid_positions[i][0];
+                col = valid_positions[i][1];
+                if (execute_initial_removal(board, row, col, true)) {
+                    break;
+                }
+            }
+        }
+        
+        printf("Black removed stone at %c%d\n", 'A' + col, row + 1);
+    }
+    
+    print_board(board);
+    
+    if (mode == GAME_MODE_HUMAN_VS_HUMAN || 
+        (mode == GAME_MODE_HUMAN_VS_AI && human_is_white)) {
+        do {
+            printf("White: remove a stone adjacent to black's removal: ");
+        } while (!read_coord(&row, &col) || !execute_initial_removal(board, row, col, false));
+    } else {
+        printf("White (AI) is removing a stone...\n");
+        
+        int attempts = 0;
+        do {
+            row = rand() % BOARD_SIZE;
+            col = rand() % BOARD_SIZE;
+            attempts++;
+  
+            if (execute_initial_removal(board, row, col, false)) {
+                printf("White removed stone at %c%d\n", 'A' + col, row + 1);
+                break;
+            }
+            
+            if (attempts > 100) {
+                printf("AI couldn't find valid white removal. Using fallback.\n");
+                execute_initial_removal(board, 0, 1, false);
+                break;
+            }
+        } while (true);
+    }
+    
+    print_board(board);
+    
+    bool is_white_turn = false;
+    int move_count = 0;
 
-    execute_sequence(board, &seq, is_white_turn);
-    is_white_turn = !is_white_turn;
-  }
+    while (true) {
+        printf("--- Move %d ---\n", ++move_count);
+        print_board(board);
+        
+        MoveSequence seq;
+        bool has_move = false;
 
-  free(board);
-  printf("Game over!\n");
+        bool is_human_turn = false;
+        
+        if (mode == GAME_MODE_HUMAN_VS_HUMAN) {
+            is_human_turn = true;
+        } else if (mode == GAME_MODE_HUMAN_VS_AI) {
+            is_human_turn = (is_white_turn && human_is_white) || 
+                           (!is_white_turn && human_is_black);
+        }
+
+        if (is_human_turn) {
+            has_move = human_choose_move(board, is_white_turn, &seq);
+            
+            if (!has_move) {
+                printf("%s has no legal moves!\n", 
+                       is_white_turn ? "White" : "Black");
+                break;
+            }
+        } else {
+            printf("%s (AI) is thinking...\n", 
+                   is_white_turn ? "White" : "Black");
+            
+            has_move = ai_random_move(board, is_white_turn, &seq);
+            
+            if (!has_move) {
+                printf("%s (AI) has no legal moves!\n", 
+                       is_white_turn ? "White" : "Black");
+                break;
+            }
+            
+            printf("AI plays: ");
+            print_move_sequence(&seq);
+        }
+        
+        execute_sequence(board, &seq, is_white_turn);
+
+        is_white_turn = !is_white_turn;
+        
+        if (mode == GAME_MODE_AI_VS_AI) {
+            printf("Press Enter to continue...");
+            while (getchar() != '\n');
+        }
+    }
+    
+    printf("\n=== GAME OVER ===\n");
+    print_board(board);
+  
+    printf("Winner: %s\n", 
+           is_white_turn ? "Black" : "White");
+    
+    free(board);
 }
 
 bool read_coord(int *row, int *col) {

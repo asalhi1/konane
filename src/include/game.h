@@ -3,13 +3,26 @@
 
 #include <stdbool.h>
 #include <ctype.h>
+#include "ai.h"
 #include "board.h"
 #include "move.h"
 
-void run_game(void);
+typedef enum {
+  GAME_MODE_HUMAN_VS_HUMAN,
+  GAME_MODE_HUMAN_VS_AI,
+  GAME_MODE_AI_VS_AI
+} GameMode;
+
+typedef enum {
+  PLAYER_TYPE_HUMAN,
+  PLAYER_TYPE_AI_RANDOM
+} PlayerType;
+
+void run_game(GameMode mode);
 
 bool read_coord(int *row, int *col);
 
 bool human_choose_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq);
+bool play_ai_turn(Board *board, bool is_white_turn, MoveSequence *chosen_seq);
 
 #endif
