@@ -7,9 +7,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MOBILITY_WEIGHT 15
-#define MATERIAL_WEIGHT 10
-#define MULTIJUMP_WEIGHT 5
+#define MOBILITY_WEIGHT 20
+#define MATERIAL_WEIGHT 15
+#define CORNER_WEIGHT 6
+#define EDGE_WEIGHT 3
+#define JUMP_POTENTIAL_WEIGHT 5
+#define ISOLATION_PENALTY -3
 
 #define INT_MIN -1e9
 #define INT_MAX 1e9

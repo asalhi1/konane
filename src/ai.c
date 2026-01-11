@@ -16,6 +16,10 @@ bool ai_random_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq) 
   return true;
 }
 
+/* Direction vectors: up, right, down, left */
+static const int dir_row[4] = {-1, 0, 1, 0};
+static const int dir_col[4] = {0, 1, 0, -1};
+
 int eval_position(Board *board, bool is_white) {
   int score = 0;
 
@@ -32,13 +36,140 @@ int eval_position(Board *board, bool is_white) {
   else score -= mob_diff * MOBILITY_WEIGHT;
 
   // Material
-  int white_stones = popcount(board->white);
-  int black_stones = popcount(board->black);
+  int white_stone_count = popcount(board->white);
+  int black_stone_count = popcount(board->black);
 
-  int stone_diff = white_stones - black_stones;
+  int stone_diff = white_stone_count - black_stone_count;
 
   if (is_white) score += stone_diff * MATERIAL_WEIGHT;
   else score -= stone_diff * MATERIAL_WEIGHT;
+
+  // Corners
+  Bitboard corner_mask = get_bitmask(0, 0) | get_bitmask(0, BOARD_SIZE-1) |
+                          get_bitmask(BOARD_SIZE-1, 0) | get_bitmask(BOARD_SIZE-1, BOARD_SIZE-1);
+
+  int white_corners = popcount(board->white & corner_mask);
+  int black_corners = popcount(board->black & corner_mask);
+  int corner_diff = white_corners - black_corners;
+
+  if (is_white) score += corner_diff * CORNER_WEIGHT;
+  else score -= corner_diff * CORNER_WEIGHT;
+
+  // Edges
+  Bitboard edge_mask = 0;
+  for (int i = 0; i < BOARD_SIZE; i++) {
+    edge_mask |= get_bitmask(0, i);
+    edge_mask |= get_bitmask(BOARD_SIZE-1, i);
+    edge_mask |= get_bitmask(i, 0);
+    edge_mask |= get_bitmask(i, BOARD_SIZE-1);
+  }
+
+  edge_mask &= ~corner_mask;
+
+  int white_edges = popcount(board->white & edge_mask);
+  int black_edges = popcount(board->black & edge_mask);
+  int edge_diff = white_edges - black_edges;
+
+  if (is_white) score += edge_diff * EDGE_WEIGHT;
+  else score -= edge_diff * EDGE_WEIGHT;
+
+  // Jump potential - RENAMED THESE
+  int white_jump_potential = 0;
+  int black_jump_potential = 0;
+
+  Bitboard white_stones_bb = board->white;  // RENAMED
+  while (white_stones_bb) {
+    int idx = pop_lsb(&white_stones_bb);
+    int row, col;
+    index_to_coord(idx, &row, &col);
+    
+    for (int dir = 0; dir < 4; dir++) {
+      int jump_row = row + dir_row[dir];
+      int jump_col = col + dir_col[dir];
+      int land_row = row + 2 * dir_row[dir];
+      int land_col = col + 2 * dir_col[dir];
+      
+      if (is_valid_position(jump_row, jump_col) && 
+        is_valid_position(land_row, land_col)) {
+        if (is_black(board, jump_row, jump_col) && 
+          is_empty(board, land_row, land_col)) {
+          white_jump_potential++;
+        }
+      }
+    }
+  }
+
+  Bitboard black_stones_bb = board->black;  // RENAMED
+  while (black_stones_bb) {
+    int idx = pop_lsb(&black_stones_bb);
+    int row, col;
+    index_to_coord(idx, &row, &col);
+    
+    for (int dir = 0; dir < 4; dir++) {
+      int jump_row = row + dir_row[dir];
+      int jump_col = col + dir_col[dir];
+      int land_row = row + 2 * dir_row[dir];
+      int land_col = col + 2 * dir_col[dir];
+      
+      if (is_valid_position(jump_row, jump_col) && 
+          is_valid_position(land_row, land_col)) {
+        if (is_white(board, jump_row, jump_col) && 
+          is_empty(board, land_row, land_col)) {
+          black_jump_potential++;
+        }
+      }
+    }
+  }
+
+  int jump_pot_diff = white_jump_potential - black_jump_potential;
+  if (is_white) score += jump_pot_diff * JUMP_POTENTIAL_WEIGHT;
+  else score -= jump_pot_diff * JUMP_POTENTIAL_WEIGHT;
+
+  // Isolated stones (penalty)
+  int white_isolated = 0;
+  int black_isolated = 0;
+
+  // Check each white stone
+  Bitboard stones_bb = board->white;  // RENAMED
+  while (stones_bb) {
+    int idx = pop_lsb(&stones_bb);
+    int row, col;
+    index_to_coord(idx, &row, &col);
+    
+    bool has_friendly_neighbor = false;
+    for (int dir = 0; dir < 4; dir++) {
+      int n_row = row + dir_row[dir];
+      int n_col = col + dir_col[dir];
+      if (is_valid_position(n_row, n_col) && is_white(board, n_row, n_col)) {
+        has_friendly_neighbor = true;
+        break;
+      }
+    }
+    if (!has_friendly_neighbor) white_isolated++;
+  }
+
+  // Check each black stone
+  stones_bb = board->black;
+  while (stones_bb) {
+    int idx = pop_lsb(&stones_bb);
+    int row, col;
+    index_to_coord(idx, &row, &col);
+    
+    bool has_friendly_neighbor = false;
+    for (int dir = 0; dir < 4; dir++) {
+      int n_row = row + dir_row[dir];
+      int n_col = col + dir_col[dir];
+      if (is_valid_position(n_row, n_col) && is_black(board, n_row, n_col)) {
+        has_friendly_neighbor = true;
+        break;
+      }
+    }
+    if (!has_friendly_neighbor) black_isolated++;
+  }
+
+  int isolation_diff = white_isolated - black_isolated;
+  if (is_white) score += isolation_diff * ISOLATION_PENALTY;
+  else score -= isolation_diff * ISOLATION_PENALTY;
 
   // Endgame
   if (white_mob == 0 && black_mob > 0) {
@@ -165,6 +296,6 @@ bool get_best_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq, i
     *chosen_seq = best_sequence;
   }
 
-  printf("Negamax: depth %d, score %d\n", depth, score);
+  printf("[Negamax] depth %d, score %d\n", depth, score);
   return true;
 }
