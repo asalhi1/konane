@@ -23,7 +23,7 @@ void ai_init(void);
 
 bool ai_random_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq);
 
-int eval_position(Board *board, bool is_white);
+int eval_position(Board *board, bool player_is_white);
 int negamax(Board *board, int depth, bool is_white, int alpha, int beta, MoveSequence *best_sequence);
 bool get_best_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq, int depth);
 

@@ -20,7 +20,7 @@ bool ai_random_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq) 
 static const int dir_row[4] = {-1, 0, 1, 0};
 static const int dir_col[4] = {0, 1, 0, -1};
 
-int eval_position(Board *board, bool is_white) {
+int eval_position(Board *board, bool player_is_white) {  
   int score = 0;
 
   MoveSequence white_moves[MAX_MOVES];
@@ -32,8 +32,8 @@ int eval_position(Board *board, bool is_white) {
 
   int mob_diff = white_mob - black_mob;
 
-  if (is_white) score += mob_diff * MOBILITY_WEIGHT;
-  else score -= mob_diff * MOBILITY_WEIGHT;
+  if (player_is_white) score += mob_diff * MOBILITY_WEIGHT;  
+  else score -= mob_diff * MOBILITY_WEIGHT;  
 
   // Material
   int white_stone_count = popcount(board->white);
@@ -41,19 +41,19 @@ int eval_position(Board *board, bool is_white) {
 
   int stone_diff = white_stone_count - black_stone_count;
 
-  if (is_white) score += stone_diff * MATERIAL_WEIGHT;
-  else score -= stone_diff * MATERIAL_WEIGHT;
+  if (player_is_white) score += stone_diff * MATERIAL_WEIGHT;  
+  else score -= stone_diff * MATERIAL_WEIGHT;  
 
   // Corners
   Bitboard corner_mask = get_bitmask(0, 0) | get_bitmask(0, BOARD_SIZE-1) |
-                          get_bitmask(BOARD_SIZE-1, 0) | get_bitmask(BOARD_SIZE-1, BOARD_SIZE-1);
+                         get_bitmask(BOARD_SIZE-1, 0) | get_bitmask(BOARD_SIZE-1, BOARD_SIZE-1);
 
   int white_corners = popcount(board->white & corner_mask);
   int black_corners = popcount(board->black & corner_mask);
   int corner_diff = white_corners - black_corners;
 
-  if (is_white) score += corner_diff * CORNER_WEIGHT;
-  else score -= corner_diff * CORNER_WEIGHT;
+  if (player_is_white) score += corner_diff * CORNER_WEIGHT;  
+  else score -= corner_diff * CORNER_WEIGHT;  
 
   // Edges
   Bitboard edge_mask = 0;
@@ -70,14 +70,14 @@ int eval_position(Board *board, bool is_white) {
   int black_edges = popcount(board->black & edge_mask);
   int edge_diff = white_edges - black_edges;
 
-  if (is_white) score += edge_diff * EDGE_WEIGHT;
-  else score -= edge_diff * EDGE_WEIGHT;
+  if (player_is_white) score += edge_diff * EDGE_WEIGHT;  
+  else score -= edge_diff * EDGE_WEIGHT;  
 
-  // Jump potential - RENAMED THESE
+  // Jump potential
   int white_jump_potential = 0;
   int black_jump_potential = 0;
 
-  Bitboard white_stones_bb = board->white;  // RENAMED
+  Bitboard white_stones_bb = board->white;
   while (white_stones_bb) {
     int idx = pop_lsb(&white_stones_bb);
     int row, col;
@@ -91,7 +91,7 @@ int eval_position(Board *board, bool is_white) {
       
       if (is_valid_position(jump_row, jump_col) && 
         is_valid_position(land_row, land_col)) {
-        if (is_black(board, jump_row, jump_col) && 
+        if (is_black(board, jump_row, jump_col) &&  // This is a function call
           is_empty(board, land_row, land_col)) {
           white_jump_potential++;
         }
@@ -99,7 +99,7 @@ int eval_position(Board *board, bool is_white) {
     }
   }
 
-  Bitboard black_stones_bb = board->black;  // RENAMED
+  Bitboard black_stones_bb = board->black;
   while (black_stones_bb) {
     int idx = pop_lsb(&black_stones_bb);
     int row, col;
@@ -113,7 +113,7 @@ int eval_position(Board *board, bool is_white) {
       
       if (is_valid_position(jump_row, jump_col) && 
           is_valid_position(land_row, land_col)) {
-        if (is_white(board, jump_row, jump_col) && 
+        if (is_white(board, jump_row, jump_col) &&  // This is a function call
           is_empty(board, land_row, land_col)) {
           black_jump_potential++;
         }
@@ -122,15 +122,15 @@ int eval_position(Board *board, bool is_white) {
   }
 
   int jump_pot_diff = white_jump_potential - black_jump_potential;
-  if (is_white) score += jump_pot_diff * JUMP_POTENTIAL_WEIGHT;
-  else score -= jump_pot_diff * JUMP_POTENTIAL_WEIGHT;
+  if (player_is_white) score += jump_pot_diff * JUMP_POTENTIAL_WEIGHT;  
+  else score -= jump_pot_diff * JUMP_POTENTIAL_WEIGHT;  
 
   // Isolated stones (penalty)
   int white_isolated = 0;
   int black_isolated = 0;
 
   // Check each white stone
-  Bitboard stones_bb = board->white;  // RENAMED
+  Bitboard stones_bb = board->white;
   while (stones_bb) {
     int idx = pop_lsb(&stones_bb);
     int row, col;
@@ -140,7 +140,7 @@ int eval_position(Board *board, bool is_white) {
     for (int dir = 0; dir < 4; dir++) {
       int n_row = row + dir_row[dir];
       int n_col = col + dir_col[dir];
-      if (is_valid_position(n_row, n_col) && is_white(board, n_row, n_col)) {
+      if (is_valid_position(n_row, n_col) && is_white(board, n_row, n_col)) {  // Function call
         has_friendly_neighbor = true;
         break;
       }
@@ -159,7 +159,7 @@ int eval_position(Board *board, bool is_white) {
     for (int dir = 0; dir < 4; dir++) {
       int n_row = row + dir_row[dir];
       int n_col = col + dir_col[dir];
-      if (is_valid_position(n_row, n_col) && is_black(board, n_row, n_col)) {
+      if (is_valid_position(n_row, n_col) && is_black(board, n_row, n_col)) {  // Function call
         has_friendly_neighbor = true;
         break;
       }
@@ -168,16 +168,16 @@ int eval_position(Board *board, bool is_white) {
   }
 
   int isolation_diff = white_isolated - black_isolated;
-  if (is_white) score += isolation_diff * ISOLATION_PENALTY;
+  if (player_is_white) score += isolation_diff * ISOLATION_PENALTY;  
   else score -= isolation_diff * ISOLATION_PENALTY;
 
   // Endgame
   if (white_mob == 0 && black_mob > 0) {
-    return is_white ? -10000 : 10000;
+    return player_is_white ? -10000 : 10000;
   }
 
   if (black_mob == 0 && white_mob > 0) {
-    return is_white ? 10000 : -10000;
+    return player_is_white ? 10000 : -10000;
   }
 
   return score;
