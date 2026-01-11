@@ -121,7 +121,7 @@ void run_game(GameMode mode) {
             printf("%s (AI) is thinking...\n", 
                    is_white_turn ? "White" : "Black");
             
-            has_move = ai_random_move(board, is_white_turn, &seq);
+            has_move = get_best_move(board, is_white_turn, &seq, DEF_DEPTH);
             
             if (!has_move) {
                 printf("%s (AI) has no legal moves!\n", 
