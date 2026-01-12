@@ -1,12 +1,13 @@
 #include "ui.h"
+#include "perft.h"
 
 void main_menu(void) {
   printf("-- \033[1mK O N A N E\033[0m --\n");
 
   int n = -1;
 
-  while (n < 1 || n > 3) {
-    printf("(1) Play PvP\n(2) Play PvAI\n(3) Watch AIvAI\n");
+  while (n < 1 || n > 4) {
+    printf("(1) Play PvP\n(2) Play PvAI\n(3) Watch AIvAI\n(4) Perft / Benchmarks\n");
     printf("> ");
     scanf("%d", &n);
   }
@@ -20,6 +21,9 @@ void main_menu(void) {
       break;  
     case 3:
       run_game(GAME_MODE_AI_VS_AI);
+      break;
+    case 4:
+      perft_menu();
       break;
   }
 }
