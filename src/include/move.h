@@ -17,10 +17,12 @@
 
 typedef uint32_t Move;
 
+// Encode a move
 #define MOVE_ENCODE(from, to, captured, jump_count, dir) \
   ((Move)((from) | ((to) << 7) | ((captured) << 14) | \
           ((jump_count) << 21) | ((dir) << 23)))
 
+// Extract information from a move
 #define MOVE_FROM(move)       ((move) & 0x7F)
 #define MOVE_TO(move)         (((move) >> 7) & 0x7F)
 #define MOVE_CAPTURED(move)   (((move) >> 14) & 0x7F)
@@ -39,19 +41,24 @@ typedef struct {
   Move jumps[MAX_MOVES];
 } MoveSequence;
 
+// Encode and return simple move
 Move create_simple_jump(int from_row, int from_col,
                         int to_row, int to_col,
                         int captured_row, int captured_col,
                         int direction);
 
+// Encode and return initial removal
 Move create_initial_removal(int row, int col);
 
+// Generate list of all valid moves for a player
 int generate_all_moves(const Board *board,
                        bool is_white_turn,
                        MoveSequence *out_moves);
 
+// Display MoveSequence struct
 void print_move_sequence(const MoveSequence *seq);
 
+// Recursively execute valid jumps
 void dfs_jumps(const Board *board,
                int row, int col,
                bool is_white_turn,
@@ -59,14 +66,17 @@ void dfs_jumps(const Board *board,
                MoveSequence *results,
                int *result_count);
 
+// Execute a MoveSequence on a Board
 bool execute_sequence(Board *board,
                       const MoveSequence *seq,
                       bool is_white_turn);
 
+// Execute an initial removal on a Board
 bool execute_initial_removal(Board *board,
                              int row, int col,
                              bool is_black);
 
+// CHeck if a position is a valid initial removal
 bool is_valid_initial_removal(const Board *board,
                               int row, int col,
                               bool is_black);

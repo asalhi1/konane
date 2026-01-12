@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "game.h"
 
+// Display main menu
 void main_menu(void);
 
 #endif
