@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+/* Bitboard layout: 7x7 board stored in row-major order using the lower
+   49 bits of a 64-bit integer. Index 0 = row 0, col 0 (A1). */
 #define BOARD_SIZE 7
 #define TOTAL_CELLS (BOARD_SIZE * BOARD_SIZE)
 

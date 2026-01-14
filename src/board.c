@@ -1,5 +1,9 @@
+/* Board utilities and bitboard helpers.
+   The 7x7 board is stored in row-major order using the lower 49 bits
+   of a 64-bit bitboard (VALID_MASK). Index 0 = A1 (row 0, col 0). */
 #include "board.h"
 
+// Check if row,col is a valid position in the 7x7 board
 bool is_valid_position(int row, int col) {
   if ((row < 0) || (row > BOARD_SIZE - 1) ||
       (col < 0) || (col > BOARD_SIZE - 1)) return false;
@@ -7,6 +11,7 @@ bool is_valid_position(int row, int col) {
   return true;
 }
 
+// Pop the least significant bit
 int pop_lsb(Bitboard *bitboard) {
   if (*bitboard == 0) return -1;
 
@@ -16,6 +21,7 @@ int pop_lsb(Bitboard *bitboard) {
   return idx;
 }
 
+// Count number of on bits
 int popcount(Bitboard bitboard) {
   int count = 0;
 
@@ -24,15 +30,18 @@ int popcount(Bitboard bitboard) {
   return count;
 }
 
+// Convert coordinates to index
 int coord_to_index(int row, int col) {
   return row * BOARD_SIZE + col;
 }
 
+// Convert index to coordinates
 void index_to_coord(int index, int *row, int *col) {
   *row = index / BOARD_SIZE;
   *col = index % BOARD_SIZE;
 }
 
+// Initialize board
 void init_board(Board *board) {
   board->white = 0;
   board->black = 0;
@@ -50,6 +59,7 @@ void init_board(Board *board) {
   board->empty = (~board->occupied) & VALID_MASK;
 }
 
+// Check if stone is white/black/empty
 bool is_white(const Board *board, int row, int col) {
   return (board->white & get_bitmask(row, col)) != 0;
 }
@@ -62,6 +72,7 @@ bool is_empty(const Board *board, int row, int col) {
   return (board->occupied & get_bitmask(row, col)) == 0;
 }
 
+// Set a square to white/black/remove stone
 void set_white(Board *board, int row, int col) {
   Bitboard mask = get_bitmask(row, col);
   board->white |= mask;
@@ -84,6 +95,7 @@ void remove_stone(Board *board, int row, int col) {
   board->empty |= mask;
 }
 
+// Get bitmask for a position (row, col)
 Bitboard get_bitmask(int row, int col) {
   if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) return 0;
 
@@ -94,6 +106,7 @@ Bitboard get_bitmask(int row, int col) {
   return ((Bitboard)1 << index) & VALID_MASK;
 }
 
+// Print board
 void print_board(const Board *board) {
   printf("  ");
   for (int col = 0; col < BOARD_SIZE; col ++) {
@@ -118,6 +131,7 @@ void print_board(const Board *board) {
   printf("\n");
 }
 
+// Print bitboard
 void print_bitboard(const Bitboard bitboard) {
   printf("  ");
   for (int col = 0; col < BOARD_SIZE; col ++) {

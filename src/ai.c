@@ -1,9 +1,13 @@
+/* Simple AI utilities: a basic evaluator and a negamax search with
+   alpha-beta pruning. We keep heuristics readable and lightweight. */
 #include "ai.h"
 
+// Seed rand (used by simple AI heuristics/random moves)
 void ai_init(void) {
   srand(time(NULL));
 }
 
+// Choose a random valid move (fallback, for very simple AI behavior)
 bool ai_random_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq) {
   MoveSequence all_moves[MAX_MOVES];
   int num_moves = generate_all_moves(board, is_white_turn, all_moves);
@@ -91,7 +95,7 @@ int eval_position(Board *board, bool player_is_white) {
       
       if (is_valid_position(jump_row, jump_col) && 
         is_valid_position(land_row, land_col)) {
-        if (is_black(board, jump_row, jump_col) &&  // This is a function call
+        if (is_black(board, jump_row, jump_col) &&
           is_empty(board, land_row, land_col)) {
           white_jump_potential++;
         }
@@ -113,7 +117,7 @@ int eval_position(Board *board, bool player_is_white) {
       
       if (is_valid_position(jump_row, jump_col) && 
           is_valid_position(land_row, land_col)) {
-        if (is_white(board, jump_row, jump_col) &&  // This is a function call
+        if (is_white(board, jump_row, jump_col) &&
           is_empty(board, land_row, land_col)) {
           black_jump_potential++;
         }
@@ -140,7 +144,7 @@ int eval_position(Board *board, bool player_is_white) {
     for (int dir = 0; dir < 4; dir++) {
       int n_row = row + dir_row[dir];
       int n_col = col + dir_col[dir];
-      if (is_valid_position(n_row, n_col) && is_white(board, n_row, n_col)) {  // Function call
+      if (is_valid_position(n_row, n_col) && is_white(board, n_row, n_col)) {
         has_friendly_neighbor = true;
         break;
       }
@@ -159,7 +163,7 @@ int eval_position(Board *board, bool player_is_white) {
     for (int dir = 0; dir < 4; dir++) {
       int n_row = row + dir_row[dir];
       int n_col = col + dir_col[dir];
-      if (is_valid_position(n_row, n_col) && is_black(board, n_row, n_col)) {  // Function call
+      if (is_valid_position(n_row, n_col) && is_black(board, n_row, n_col)) {
         has_friendly_neighbor = true;
         break;
       }
@@ -183,6 +187,7 @@ int eval_position(Board *board, bool player_is_white) {
   return score;
 }
 
+// Negamax search with alpha beta pruning
 int negamax(Board *board, int depth, bool is_white, int alpha, int beta, MoveSequence *best_sequence) {
     //static int call_count = 0;
     //static int max_depth = 0;
@@ -271,6 +276,7 @@ int negamax(Board *board, int depth, bool is_white, int alpha, int beta, MoveSeq
     return best_score;
 }
 
+// Wrapper to get best move
 bool get_best_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq, int depth) {
   if (!board || !chosen_seq || depth <= 0) return false;
 

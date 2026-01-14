@@ -1,9 +1,13 @@
+/* Move generation and execution helpers.
+   Jumps are encoded in a compact Move type; sequences are collections
+   of jumps performed by a single piece. */
 #include "move.h"
 
 /* Direction vectors: up, right, down, left */
 static const int dir_row[4] = {-1, 0, 1, 0};
 static const int dir_col[4] = {0, 1, 0, -1};
 
+// Encode and return simple move
 Move create_simple_jump(int from_row, int from_col,
                         int to_row, int to_col,
                         int captured_row, int captured_col,
@@ -15,11 +19,13 @@ Move create_simple_jump(int from_row, int from_col,
   return MOVE_ENCODE(from_idx, to_idx, captured_idx, 1, direction);
 }
 
+// ENcode and return initial removal
 Move create_initial_removal(int row, int col) {
   int idx = coord_to_index(row, col);
   return MOVE_INITIAL_REMOVAL_ENCODE(idx);
 }
 
+// Print MoveSequence struct
 void print_move_sequence(const MoveSequence *seq) {
   if (!seq || seq->count == 0) {
     printf("Empty sequence.\n");
@@ -43,6 +49,7 @@ void print_move_sequence(const MoveSequence *seq) {
   printf("\n");
 }
 
+// Recursively execute jumps in a MoveSequence
 void dfs_jumps(const Board *board,
                int row, int col,
                bool is_white_turn,
@@ -108,6 +115,7 @@ void dfs_jumps(const Board *board,
   }
 }
 
+// Generate list of all valid moves for a player
 int generate_all_moves(const Board *board,
                        bool is_white_turn,
                        MoveSequence *out_moves) {
@@ -133,6 +141,7 @@ int generate_all_moves(const Board *board,
   return count;
 }
 
+// Execute a MoveSequence on a Board
 bool execute_sequence(Board *board,
                       const MoveSequence *seq,
                       bool is_white_turn) {
@@ -155,6 +164,7 @@ bool execute_sequence(Board *board,
   return true;
 }
 
+// Execute an initial removal on a Board
 bool execute_initial_removal(Board *board,
                              int row, int col,
                              bool is_black) {
@@ -174,6 +184,7 @@ bool execute_initial_removal(Board *board,
   return true;
 }
 
+// Check if an initial removal is valid
 bool is_valid_initial_removal(const Board *board,
                               int row, int col,
                               bool is_black) {

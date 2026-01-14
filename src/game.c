@@ -1,6 +1,10 @@
+/* Main game logic: setup, handle opening removals (human or AI),
+   and alternate turns until no legal moves remain. */
 #include "game.h"
 
+// Main game loop
 void run_game(GameMode mode) {
+    /* Seed AI randomness if any AI is playing */
     if (mode == GAME_MODE_HUMAN_VS_AI || mode == GAME_MODE_AI_VS_AI) {
         ai_init();
     }
@@ -26,6 +30,8 @@ void run_game(GameMode mode) {
 
     int row, col;
     
+    /* Black's initial removal: a human must pick a corner or center, while
+       the AI uses a small heuristic list of preferred squares. */
     if (mode == GAME_MODE_HUMAN_VS_HUMAN || 
         (mode == GAME_MODE_HUMAN_VS_AI && human_is_black)) {
         do {
@@ -61,37 +67,67 @@ void run_game(GameMode mode) {
     
     print_board(board);
     
+    /* White's removal must be adjacent to the black removal; if the AI is
+       playing white it will try random positions and fall back after many attempts. */
     if (mode == GAME_MODE_HUMAN_VS_HUMAN || 
         (mode == GAME_MODE_HUMAN_VS_AI && human_is_white)) {
         do {
             printf("White: remove a stone adjacent to black's removal: ");
         } while (!read_coord(&row, &col) || !execute_initial_removal(board, row, col, false));
     } else {
-        printf("White (AI) is removing a stone...\n");
-        
-        int attempts = 0;
-        do {
-            row = rand() % BOARD_SIZE;
-            col = rand() % BOARD_SIZE;
-            attempts++;
-  
-            if (execute_initial_removal(board, row, col, false)) {
-                printf("White removed stone at %c%d\n", 'A' + col, row + 1);
-                break;
+        printf("White (AI) is selecting removal adjacent to Black's removal...\n");
+
+        /* After Black's removal there should be exactly one empty square.
+           Choose a White stone adjacent to that empty square deterministically. */
+        bool removed = false;
+
+        if (popcount(board->empty) == 1) {
+            int empty_idx = __builtin_ctzll(board->empty);
+            int er, ec;
+            index_to_coord(empty_idx, &er, &ec);
+
+            const int drow[4] = {-1, 0, 1, 0};
+            const int dcol[4] = {0, 1, 0, -1};
+
+            for (int d = 0; d < 4; d++) {
+                int r = er + drow[d];
+                int c = ec + dcol[d];
+                if (!is_valid_position(r, c)) continue;
+                if (is_white(board, r, c)) {
+                    if (execute_initial_removal(board, r, c, false)) {
+                        printf("White removed stone at %c%d\n", 'A' + c, r + 1);
+                        removed = true;
+                        break;
+                    }
+                }
             }
-            
-            if (attempts > 100) {
-                printf("AI couldn't find valid white removal. Using fallback.\n");
-                execute_initial_removal(board, 0, 1, false);
-                break;
+        }
+
+        /* Fallback: scan the board for any valid white initial removal (shouldn't be necessary)
+           but keeps behavior robust in unexpected cases. */
+        if (!removed) {
+            for (int r = 0; r < BOARD_SIZE && !removed; r++) {
+                for (int c = 0; c < BOARD_SIZE && !removed; c++) {
+                    if (execute_initial_removal(board, r, c, false)) {
+                        printf("White removed stone at %c%d (fallback)\n", 'A' + c, r + 1);
+                        removed = true;
+                    }
+                }
             }
-        } while (true);
+        }
+
+        if (!removed) {
+            printf("AI couldn't find valid white removal. Using hardcoded fallback.\n");
+            execute_initial_removal(board, 0, 1, false);
+        }
     }
     
     print_board(board);
     
+    /* Main turn loop: alternate moves between White and Black until one side
+       has no legal moves (game over). */
     bool is_white_turn = false;
-    int move_count = 0;
+    int move_count = 0; 
 
     while (true) {
         printf("--- Move %d ---\n", ++move_count);
@@ -152,6 +188,7 @@ void run_game(GameMode mode) {
     free(board);
 }
 
+// Read coordinate from user
 bool read_coord(int *row, int *col) {
   char col_char;
   int row_num;
@@ -172,6 +209,7 @@ bool read_coord(int *row, int *col) {
   return true;
 }
 
+// Let human player choose a move for a side
 bool human_choose_move(Board *board, bool is_white_turn, MoveSequence *chosen_seq) {
   char from_col_char, to_col_char;
   int from_row, to_row;

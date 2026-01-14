@@ -1,3 +1,5 @@
+/* Perft / benchmarking helpers. These functions count leaf nodes and
+   provide small diagnostic routines to validate move generation. */
 #include "perft.h"
 #include "ai.h"
 #include "move.h"
